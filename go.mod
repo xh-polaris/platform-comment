@@ -3,7 +3,7 @@ module github.com/xh-polaris/platform-comment
 go 1.18
 
 require (
-	github.com/bytedance/sonic v1.8.8
+	github.com/bytedance/sonic v1.9.2
 	github.com/cloudwego/kitex v0.6.1
 	github.com/google/wire v0.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.3
