@@ -19,12 +19,10 @@ func (s *CommentServerImpl) CreateComment(ctx context.Context, req *comment.Crea
 
 func (s *CommentServerImpl) UpdateComment(ctx context.Context, req *comment.UpdateCommentReq) (res *comment.UpdateCommentResp, err error) {
 	return s.CommentService.UpdateComment(ctx, req)
-
 }
 
 func (s *CommentServerImpl) DeleteComment(ctx context.Context, req *comment.DeleteCommentByIdReq) (res *comment.DeleteCommentByIdResp, err error) {
 	return s.CommentService.DeleteComment(ctx, req)
-
 }
 
 func (s *CommentServerImpl) ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (res *comment.ListCommentByParentResp, err error) {
@@ -34,7 +32,6 @@ func (s *CommentServerImpl) ListCommentByParent(ctx context.Context, req *commen
 
 func (s *CommentServerImpl) CountCommentByParent(ctx context.Context, req *comment.CountCommentByParentReq) (res *comment.CountCommentByParentResp, err error) {
 	return s.CommentService.CountCommentByParent(ctx, req)
-
 }
 
 func (s *CommentServerImpl) RetrieveCommentById(ctx context.Context, req *comment.RetrieveCommentByIdReq) (res *comment.RetrieveCommentByIdResp, err error) {
@@ -44,10 +41,8 @@ func (s *CommentServerImpl) RetrieveCommentById(ctx context.Context, req *commen
 
 func (s *CommentServerImpl) ListCommentByAuthorIdAndType(ctx context.Context, req *comment.ListCommentByAuthorIdAndTypeReq) (res *comment.ListCommentByAuthorIdAndTypeResp, err error) {
 	return s.CommentService.ListCommentByAuthorIdAndType(ctx, req)
-
 }
 
 func (s *CommentServerImpl) ListCommentByReplyToAndType(ctx context.Context, req *comment.ListCommentByReplyToAndTypeReq) (res *comment.ListCommentByReplyToAndTypeResp, err error) {
 	return s.CommentService.ListCommentByReplyToAndType(ctx, req)
-
 }
