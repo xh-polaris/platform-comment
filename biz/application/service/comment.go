@@ -7,6 +7,9 @@ import (
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/data/db"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
 	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/zeromicro/go-zero/core/stores/redis"
+	"strconv"
+	"time"
 )
 
 type ICommentService interface {
@@ -24,6 +27,7 @@ type CommentService struct {
 	Config       *config.Config
 	CommentModel mapper.CommentModel
 	HistoryModel mapper.HistoryModel
+	Redis        *redis.Redis
 }
 
 var CommentSet = wire.NewSet(
@@ -55,9 +59,37 @@ func (s *CommentService) CreateComment(ctx context.Context, req *comment.CreateC
 	if err := s.CommentModel.Insert(ctx, &data); err != nil {
 		return nil, err
 	}
-	return &comment.CreateCommentResp{
-		Id: data.ID.Hex(),
-	}, nil
+	resp = &comment.CreateCommentResp{
+		Id:      data.ID.Hex(),
+		IsFirst: false,
+	}
+	r, err := s.Redis.GetCtx(ctx, "comment"+req.AuthorId)
+	if err != nil {
+		return resp, nil
+	} else if r == "" {
+		resp.IsFirst = true
+		err = s.Redis.SetexCtx(ctx, "comment"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
+		if err != nil {
+			resp.IsFirst = false
+			return resp, nil
+		}
+	} else {
+		m, err := strconv.ParseInt(r, 10, 64)
+		if err != nil {
+			return resp, nil
+		}
+		lastTime := time.Unix(m, 0)
+		err = s.Redis.SetexCtx(ctx, "comment"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
+		if err != nil {
+			return resp, nil
+		}
+		if lastTime.Day() == time.Now().Day() && lastTime.Month() == time.Now().Month() && lastTime.Year() == time.Now().Year() {
+			resp.IsFirst = false
+		} else {
+			resp.IsFirst = true
+		}
+	}
+	return resp, nil
 }
 
 func (s *CommentService) saveToHistory(ctx context.Context, historyType string, data *db.Comment) error {

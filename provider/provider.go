@@ -5,6 +5,7 @@ import (
 	"github.com/xh-polaris/platform-comment/biz/application/service"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/stores/redis"
 )
 
 var AllProvider = wire.NewSet(
@@ -18,6 +19,7 @@ var ApplicationSet = wire.NewSet(
 
 var InfrastructureSet = wire.NewSet(
 	config.NewConfig,
+	redis.NewRedis,
 	MapperSet,
 )
 

@@ -11,6 +11,7 @@ import (
 	"github.com/xh-polaris/platform-comment/biz/application/service"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/stores/redis"
 )
 
 // Injectors from wire.go:
@@ -22,10 +23,12 @@ func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
 	}
 	commentModel := mapper.NewCommentModel(configConfig)
 	historyModel := mapper.NewHistoryModel(configConfig)
+	redisRedis := redis.NewRedis(configConfig)
 	commentService := &service.CommentService{
 		Config:       configConfig,
 		CommentModel: commentModel,
 		HistoryModel: historyModel,
+		Redis:        redisRedis,
 	}
 	commentServerImpl := &adaptor.CommentServerImpl{
 		Config:         configConfig,

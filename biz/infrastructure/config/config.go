@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/zeromicro/go-zero/core/stores/redis"
 	"os"
 
 	"github.com/zeromicro/go-zero/core/conf"
@@ -12,6 +13,7 @@ type Config struct {
 	service.ServiceConf
 	ListenOn string
 	Cache    cache.CacheConf
+	Redis    *redis.RedisConf
 	Mongo    *struct {
 		DB  string
 		URL string
