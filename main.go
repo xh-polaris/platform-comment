@@ -1,17 +1,21 @@
 package main
 
 import (
-	"github.com/xh-polaris/platform-comment/biz/infrastructure/util/log"
-	"github.com/xh-polaris/platform-comment/provider"
-	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment/commentservice"
 	"net"
 
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
 	"github.com/kitex-contrib/obs-opentelemetry/tracing"
+	logx "github.com/xh-polaris/gopkg/util/log"
+	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment/commentservice"
+
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/util/log"
+	"github.com/xh-polaris/platform-comment/provider"
 )
 
 func main() {
+	klog.SetLogger(logx.NewKlogLogger())
 	s, err := provider.NewCommentServerImpl()
 	if err != nil {
 		panic(err)
