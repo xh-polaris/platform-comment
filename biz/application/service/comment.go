@@ -16,7 +16,7 @@ type ICommentService interface {
 	CreateComment(ctx context.Context, req *comment.CreateCommentReq) (resp *comment.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *comment.UpdateCommentReq) (resp *comment.UpdateCommentResp, err error)
 	DeleteComment(ctx context.Context, req *comment.DeleteCommentByIdReq) (resp *comment.DeleteCommentByIdResp, err error)
-	ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (resp *comment.ListCommentByParentResp, err error)
+	ListCommentByParentOrFirstLevelId(ctx context.Context, req *comment.ListCommentByParentOrFirstLevelIdReq) (resp *comment.ListCommentByParentOrFirstLevelIdResp, err error)
 	CountCommentByParent(ctx context.Context, req *comment.CountCommentByParentReq) (resp *comment.CountCommentByParentResp, err error)
 	RetrieveCommentById(ctx context.Context, req *comment.RetrieveCommentByIdReq) (resp *comment.RetrieveCommentByIdResp, err error)
 	ListCommentByAuthorIdAndType(ctx context.Context, req *comment.ListCommentByAuthorIdAndTypeReq) (resp *comment.ListCommentByAuthorIdAndTypeResp, err error)
@@ -37,24 +37,26 @@ var CommentSet = wire.NewSet(
 
 func CommentConvert(in db.Comment) *comment.Comment {
 	return &comment.Comment{
-		Id:       in.ID.Hex(),
-		Text:     in.Text,
-		AuthorId: in.AuthorId,
-		ReplyTo:  in.ReplyTo,
-		Type:     in.Type,
-		ParentId: in.ParentId,
-		UpdateAt: in.UpdateAt.Unix(),
-		CreateAt: in.CreateAt.Unix(),
+		Id:           in.ID.Hex(),
+		Text:         in.Text,
+		AuthorId:     in.AuthorId,
+		ReplyTo:      in.ReplyTo,
+		Type:         in.Type,
+		ParentId:     in.ParentId,
+		FirstLevelId: in.FirstLevelId,
+		UpdateAt:     in.UpdateAt.Unix(),
+		CreateAt:     in.CreateAt.Unix(),
 	}
 }
 
 func (s *CommentService) CreateComment(ctx context.Context, req *comment.CreateCommentReq) (resp *comment.CreateCommentResp, err error) {
 	data := db.Comment{
-		Text:     req.Text,
-		AuthorId: req.AuthorId,
-		ReplyTo:  req.ReplyTo,
-		Type:     req.Type,
-		ParentId: req.ParentId,
+		Text:         req.Text,
+		FirstLevelId: req.FirstLevelId,
+		AuthorId:     req.AuthorId,
+		ReplyTo:      req.ReplyTo,
+		Type:         req.Type,
+		ParentId:     req.ParentId,
 	}
 	if err := s.CommentModel.Insert(ctx, &data); err != nil {
 		return nil, err
@@ -135,13 +137,20 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *comment.DeleteC
 	return &comment.DeleteCommentByIdResp{}, nil
 }
 
-func (s *CommentService) ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (resp *comment.ListCommentByParentResp, err error) {
-	data, count, err := s.CommentModel.FindByParent(ctx, req.Type, req.ParentId, req.Skip, req.Limit)
+func (s *CommentService) ListCommentByParentOrFirstLevelId(ctx context.Context, req *comment.ListCommentByParentOrFirstLevelIdReq) (resp *comment.ListCommentByParentOrFirstLevelIdResp, err error) {
+	var data []db.Comment
+	var count int64
+	if req.Type != "comment" {
+		data, count, err = s.CommentModel.FindByParent(ctx, req.Type, req.Id, req.Skip, req.Limit)
+	} else {
+		data, count, err = s.CommentModel.FindByFirstLevel(ctx, req.Type, req.Id, req.Skip, req.Limit)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	res := comment.ListCommentByParentResp{
+	res := comment.ListCommentByParentOrFirstLevelIdResp{
 		Comments: make([]*comment.Comment, 0, len(data)),
 		Total:    count,
 	}
