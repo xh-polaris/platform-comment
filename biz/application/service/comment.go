@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/wire"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/consts"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/data/db"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
 	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment"
@@ -16,7 +17,7 @@ type ICommentService interface {
 	CreateComment(ctx context.Context, req *comment.CreateCommentReq) (resp *comment.CreateCommentResp, err error)
 	UpdateComment(ctx context.Context, req *comment.UpdateCommentReq) (resp *comment.UpdateCommentResp, err error)
 	DeleteComment(ctx context.Context, req *comment.DeleteCommentByIdReq) (resp *comment.DeleteCommentByIdResp, err error)
-	ListCommentByParentOrFirstLevelId(ctx context.Context, req *comment.ListCommentByParentOrFirstLevelIdReq) (resp *comment.ListCommentByParentOrFirstLevelIdResp, err error)
+	ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (resp *comment.ListCommentByParentResp, err error)
 	CountCommentByParent(ctx context.Context, req *comment.CountCommentByParentReq) (resp *comment.CountCommentByParentResp, err error)
 	RetrieveCommentById(ctx context.Context, req *comment.RetrieveCommentByIdReq) (resp *comment.RetrieveCommentByIdResp, err error)
 	ListCommentByAuthorIdAndType(ctx context.Context, req *comment.ListCommentByAuthorIdAndTypeReq) (resp *comment.ListCommentByAuthorIdAndTypeResp, err error)
@@ -41,7 +42,7 @@ func CommentConvert(in db.Comment) *comment.Comment {
 		Text:         in.Text,
 		AuthorId:     in.AuthorId,
 		ReplyTo:      in.ReplyTo,
-		Type:         in.Type,
+		Type:         consts.MapStringCommentType[in.Type],
 		ParentId:     in.ParentId,
 		FirstLevelId: in.FirstLevelId,
 		UpdateAt:     in.UpdateAt.Unix(),
@@ -55,7 +56,7 @@ func (s *CommentService) CreateComment(ctx context.Context, req *comment.CreateC
 		FirstLevelId: req.FirstLevelId,
 		AuthorId:     req.AuthorId,
 		ReplyTo:      req.ReplyTo,
-		Type:         req.Type,
+		Type:         consts.MapCommentTypeString[req.Type],
 		ParentId:     req.ParentId,
 	}
 	if err := s.CommentModel.Insert(ctx, &data); err != nil {
@@ -137,11 +138,11 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *comment.DeleteC
 	return &comment.DeleteCommentByIdResp{}, nil
 }
 
-func (s *CommentService) ListCommentByParentOrFirstLevelId(ctx context.Context, req *comment.ListCommentByParentOrFirstLevelIdReq) (resp *comment.ListCommentByParentOrFirstLevelIdResp, err error) {
+func (s *CommentService) ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (resp *comment.ListCommentByParentResp, err error) {
 	var data []db.Comment
 	var count int64
-	if req.Type != "comment" {
-		data, count, err = s.CommentModel.FindByParent(ctx, req.Type, req.Id, req.Skip, req.Limit)
+	if consts.MapCommentTypeString[req.Type] != "comment" {
+		data, count, err = s.CommentModel.FindByParent(ctx, consts.MapCommentTypeString[req.Type], req.Id, req.OnlyFirstLevel, req.Skip, req.Limit)
 	} else {
 		data, count, err = s.CommentModel.FindByFirstLevel(ctx, req.Id, req.Skip, req.Limit)
 	}
@@ -150,7 +151,7 @@ func (s *CommentService) ListCommentByParentOrFirstLevelId(ctx context.Context, 
 		return nil, err
 	}
 
-	res := comment.ListCommentByParentOrFirstLevelIdResp{
+	res := comment.ListCommentByParentResp{
 		Comments: make([]*comment.Comment, 0, len(data)),
 		Total:    count,
 	}
@@ -163,7 +164,7 @@ func (s *CommentService) ListCommentByParentOrFirstLevelId(ctx context.Context, 
 }
 
 func (s *CommentService) CountCommentByParent(ctx context.Context, req *comment.CountCommentByParentReq) (resp *comment.CountCommentByParentResp, err error) {
-	total, err := s.CommentModel.CountByParent(ctx, req.Type, req.ParentId)
+	total, err := s.CommentModel.CountByParent(ctx, consts.MapCommentTypeString[req.Type], req.ParentId, req.OnlyFirstLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ func (s *CommentService) RetrieveCommentById(ctx context.Context, req *comment.R
 }
 
 func (s *CommentService) ListCommentByAuthorIdAndType(ctx context.Context, req *comment.ListCommentByAuthorIdAndTypeReq) (resp *comment.ListCommentByAuthorIdAndTypeResp, err error) {
-	data, count, err := s.CommentModel.FindByAuthorIdAndType(ctx, req.AuthorId, req.Type, req.Skip, req.Limit)
+	data, count, err := s.CommentModel.FindByAuthorIdAndType(ctx, req.AuthorId, consts.MapCommentTypeString[req.Type], req.Skip, req.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +197,7 @@ func (s *CommentService) ListCommentByAuthorIdAndType(ctx context.Context, req *
 }
 
 func (s *CommentService) ListCommentByReplyToAndType(ctx context.Context, req *comment.ListCommentByReplyToAndTypeReq) (resp *comment.ListCommentByReplyToAndTypeResp, err error) {
-	data, count, err := s.CommentModel.FindByReplyToAndType(ctx, req.Type, req.ReplyTo, req.Skip, req.Limit)
+	data, count, err := s.CommentModel.FindByReplyToAndType(ctx, consts.MapCommentTypeString[req.Type], req.ReplyTo, req.Skip, req.Limit)
 	if err != nil {
 		return nil, err
 	}
