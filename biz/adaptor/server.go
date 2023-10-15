@@ -25,8 +25,8 @@ func (s *CommentServerImpl) DeleteComment(ctx context.Context, req *comment.Dele
 	return s.CommentService.DeleteComment(ctx, req)
 }
 
-func (s *CommentServerImpl) ListCommentByParentOrFirstLevelId(ctx context.Context, req *comment.ListCommentByParentOrFirstLevelIdReq) (res *comment.ListCommentByParentOrFirstLevelIdResp, err error) {
-	return s.CommentService.ListCommentByParentOrFirstLevelId(ctx, req)
+func (s *CommentServerImpl) ListCommentByParent(ctx context.Context, req *comment.ListCommentByParentReq) (res *comment.ListCommentByParentResp, err error) {
+	return s.CommentService.ListCommentByParent(ctx, req)
 
 }
 
