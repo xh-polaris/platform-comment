@@ -164,11 +164,19 @@ func (s *CommentService) ListCommentByParent(ctx context.Context, req *comment.L
 }
 
 func (s *CommentService) CountCommentByParent(ctx context.Context, req *comment.CountCommentByParentReq) (resp *comment.CountCommentByParentResp, err error) {
-	total, err := s.CommentModel.CountByParent(ctx, consts.MapCommentTypeString[req.Type], req.ParentId, req.OnlyFirstLevel)
-	if err != nil {
-		return nil, err
+	if consts.MapCommentTypeString[req.Type] != "comment" {
+		total, err := s.CommentModel.CountByParent(ctx, consts.MapCommentTypeString[req.Type], req.ParentId, req.OnlyFirstLevel)
+		if err != nil {
+			return nil, err
+		}
+		return &comment.CountCommentByParentResp{Total: total}, nil
+	} else {
+		total, err := s.CommentModel.CountByFirstLevel(ctx, req.ParentId)
+		if err != nil {
+			return nil, err
+		}
+		return &comment.CountCommentByParentResp{Total: total}, nil
 	}
-	return &comment.CountCommentByParentResp{Total: total}, nil
 }
 
 func (s *CommentService) RetrieveCommentById(ctx context.Context, req *comment.RetrieveCommentByIdReq) (resp *comment.RetrieveCommentByIdResp, err error) {

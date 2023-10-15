@@ -24,6 +24,7 @@ type (
 		FindByFirstLevel(ctx context.Context, firstLevelId string, skip int64, limit int64) ([]db.Comment, int64, error)
 		FindByReplyToAndType(ctx context.Context, _type string, replyTo string, skip int64, limit int64) ([]db.Comment, int64, error)
 		CountByParent(ctx context.Context, _type string, parentId string, onlyFirstLevel *bool) (int64, error)
+		CountByFirstLevel(ctx context.Context, parentId string) (int64, error)
 	}
 
 	customCommentModel struct {
@@ -143,6 +144,17 @@ func (c *customCommentModel) CountByParent(ctx context.Context, _type string, pa
 				"firstLevelId": nil,
 			}
 		}
+	}
+	total, err := c.conn.CountDocuments(ctx, m)
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
+func (c *customCommentModel) CountByFirstLevel(ctx context.Context, parentId string) (int64, error) {
+	m := bson.M{
+		"firstLevelId": parentId,
 	}
 	total, err := c.conn.CountDocuments(ctx, m)
 	if err != nil {
