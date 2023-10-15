@@ -143,7 +143,7 @@ func (s *CommentService) ListCommentByParentOrFirstLevelId(ctx context.Context, 
 	if req.Type != "comment" {
 		data, count, err = s.CommentModel.FindByParent(ctx, req.Type, req.Id, req.Skip, req.Limit)
 	} else {
-		data, count, err = s.CommentModel.FindByFirstLevel(ctx, req.Type, req.Id, req.Skip, req.Limit)
+		data, count, err = s.CommentModel.FindByFirstLevel(ctx, req.Id, req.Skip, req.Limit)
 	}
 
 	if err != nil {

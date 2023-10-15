@@ -21,7 +21,7 @@ type (
 		commentModel
 		FindByAuthorIdAndType(ctx context.Context, authorId string, _type string, skip int64, limit int64) ([]db.Comment, int64, error)
 		FindByParent(ctx context.Context, _type string, parentId string, skip int64, limit int64) ([]db.Comment, int64, error)
-		FindByFirstLevel(ctx context.Context, _type string, firstLevelId string, skip int64, limit int64) ([]db.Comment, int64, error)
+		FindByFirstLevel(ctx context.Context, firstLevelId string, skip int64, limit int64) ([]db.Comment, int64, error)
 		FindByReplyToAndType(ctx context.Context, _type string, replyTo string, skip int64, limit int64) ([]db.Comment, int64, error)
 		CountByParent(ctx context.Context, _type string, parentId string) (int64, error)
 	}
@@ -77,12 +77,11 @@ func (c *customCommentModel) FindByParent(ctx context.Context, _type string, par
 	return data, total, err
 }
 
-func (c *customCommentModel) FindByFirstLevel(ctx context.Context, _type string, firstLevelId string, skip int64, limit int64) ([]db.Comment, int64, error) {
+func (c *customCommentModel) FindByFirstLevel(ctx context.Context, firstLevelId string, skip int64, limit int64) ([]db.Comment, int64, error) {
 	var data []db.Comment
 	if err := c.conn.Find(ctx, &data,
 		bson.M{
 			"firstLevelId": firstLevelId,
-			"type":         _type,
 		},
 		&mopt.FindOptions{
 			Skip:  &skip,
@@ -93,7 +92,6 @@ func (c *customCommentModel) FindByFirstLevel(ctx context.Context, _type string,
 	}
 	total, err := c.conn.CountDocuments(ctx, bson.M{
 		"firstLevelId": firstLevelId,
-		"type":         _type,
 	})
 	if err != nil {
 		return nil, 0, err
