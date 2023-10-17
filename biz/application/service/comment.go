@@ -134,6 +134,24 @@ func (s *CommentService) DeleteComment(ctx context.Context, req *comment.DeleteC
 	if err = s.CommentModel.Delete(ctx, req.Id); err != nil {
 		return nil, err
 	}
+	if data.FirstLevelId == "" {
+		children, _, err := s.CommentModel.FindByFirstLevel(ctx, data.ID.Hex(), 0, 9999)
+		if err != nil {
+			return nil, err
+		}
+		for _, child := range children {
+			var childData *db.Comment
+			if childData, err = s.CommentModel.FindOne(ctx, child.ID.Hex()); err != nil {
+				return nil, err
+			}
+			if err = s.saveToHistory(ctx, "delete", childData); err != nil {
+				return nil, err
+			}
+			if err = s.CommentModel.Delete(ctx, child.ID.Hex()); err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	return &comment.DeleteCommentByIdResp{}, nil
 }
