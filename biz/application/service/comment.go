@@ -2,15 +2,17 @@ package service
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	"github.com/google/wire"
+	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment"
+	"github.com/zeromicro/go-zero/core/stores/redis"
+
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/consts"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/data/db"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
-	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment"
-	"github.com/zeromicro/go-zero/core/stores/redis"
-	"strconv"
-	"time"
 )
 
 type ICommentService interface {
@@ -64,32 +66,67 @@ func (s *CommentService) CreateComment(ctx context.Context, req *comment.CreateC
 	}
 	resp = &comment.CreateCommentResp{
 		Id:      data.ID.Hex(),
-		IsFirst: false,
+		GetFish: false,
 	}
-	r, err := s.Redis.GetCtx(ctx, "comment"+req.AuthorId)
+	if req.GetFirstLevelId() != "" {
+		return resp, nil
+	}
+	t, err := s.Redis.GetCtx(ctx, "commentTimes"+req.AuthorId)
+	if err != nil {
+		return resp, nil
+	}
+	r, err := s.Redis.GetCtx(ctx, "commentDate"+req.AuthorId)
 	if err != nil {
 		return resp, nil
 	} else if r == "" {
-		resp.IsFirst = true
-		err = s.Redis.SetexCtx(ctx, "comment"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
+		resp.GetFish = true
+		resp.GetFishTimes = 1
+		err = s.Redis.SetexCtx(ctx, "commentTimes"+req.AuthorId, "1", 86400)
 		if err != nil {
-			resp.IsFirst = false
+			resp.GetFish = false
+			return resp, nil
+		}
+		err = s.Redis.SetexCtx(ctx, "commentDate"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
+		if err != nil {
+			resp.GetFish = false
 			return resp, nil
 		}
 	} else {
-		m, err := strconv.ParseInt(r, 10, 64)
+		times, err := strconv.ParseInt(t, 10, 64)
 		if err != nil {
 			return resp, nil
 		}
-		lastTime := time.Unix(m, 0)
-		err = s.Redis.SetexCtx(ctx, "comment"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
+		resp.GetFishTimes = times + 1
+		date, err := strconv.ParseInt(r, 10, 64)
+		if err != nil {
+			return resp, nil
+		}
+		lastTime := time.Unix(date, 0)
+		err = s.Redis.SetexCtx(ctx, "commentTimes"+req.AuthorId, strconv.FormatInt(times+1, 10), 86400)
+		if err != nil {
+			return resp, nil
+		}
+		err = s.Redis.SetexCtx(ctx, "commentDate"+req.AuthorId, strconv.FormatInt(time.Now().Unix(), 10), 86400)
 		if err != nil {
 			return resp, nil
 		}
 		if lastTime.Day() == time.Now().Day() && lastTime.Month() == time.Now().Month() && lastTime.Year() == time.Now().Year() {
-			resp.IsFirst = false
+			err = s.Redis.SetexCtx(ctx, "commentTimes"+req.AuthorId, strconv.FormatInt(times+1, 10), 86400)
+			if err != nil {
+				return resp, nil
+			}
+			if times >= s.Config.GetFishTimes {
+				resp.GetFish = false
+			} else {
+				resp.GetFish = true
+			}
 		} else {
-			resp.IsFirst = true
+			err = s.Redis.SetexCtx(ctx, "commentTimes"+req.AuthorId, "1", 86400)
+			if err != nil {
+				return resp, nil
+			}
+			resp.GetFish = true
+			resp.GetFishTimes = 1
 		}
 	}
 	return resp, nil
