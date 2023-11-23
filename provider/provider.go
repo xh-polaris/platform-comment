@@ -2,9 +2,11 @@ package provider
 
 import (
 	"github.com/google/wire"
+
 	"github.com/xh-polaris/platform-comment/biz/application/service"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/mq"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/stores/redis"
 )
 
@@ -20,6 +22,7 @@ var ApplicationSet = wire.NewSet(
 var InfrastructureSet = wire.NewSet(
 	config.NewConfig,
 	redis.NewRedis,
+	mq.NewMqProducer,
 	MapperSet,
 )
 

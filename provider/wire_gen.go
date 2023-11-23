@@ -11,6 +11,7 @@ import (
 	"github.com/xh-polaris/platform-comment/biz/application/service"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/config"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/mapper"
+	"github.com/xh-polaris/platform-comment/biz/infrastructure/mq"
 	"github.com/xh-polaris/platform-comment/biz/infrastructure/stores/redis"
 )
 
@@ -21,11 +22,16 @@ func NewCommentServerImpl() (*adaptor.CommentServerImpl, error) {
 	if err != nil {
 		return nil, err
 	}
+	producer, err := mq.NewMqProducer(configConfig)
+	if err != nil {
+		return nil, err
+	}
 	commentModel := mapper.NewCommentModel(configConfig)
 	historyModel := mapper.NewHistoryModel(configConfig)
 	redisRedis := redis.NewRedis(configConfig)
 	commentService := &service.CommentService{
 		Config:       configConfig,
+		MqProducer:   producer,
 		CommentModel: commentModel,
 		HistoryModel: historyModel,
 		Redis:        redisRedis,
