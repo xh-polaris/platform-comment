@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/apache/rocketmq-client-go/v2 v2.1.2
-	github.com/bytedance/sonic v1.8.8
+	github.com/bytedance/sonic v1.10.2
 	github.com/cloudwego/kitex v0.6.1
 	github.com/google/wire v0.5.0
 	github.com/kitex-contrib/obs-opentelemetry v0.2.3
@@ -21,8 +21,8 @@ require (
 	github.com/bytedance/gopkg v0.0.0-20230531144706-a12972768317 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
-	github.com/chenzhuoyu/iasm v0.0.0-20230222070914-0b1b64b0e762 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
+	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/choleraehyq/pid v0.0.16 // indirect
 	github.com/cloudwego/configmanager v0.2.0 // indirect
 	github.com/cloudwego/fastpb v0.0.4 // indirect
