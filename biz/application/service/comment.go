@@ -5,11 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/rocketmq-client-go/v2"
-	mqprimitive "github.com/apache/rocketmq-client-go/v2/primitive"
-	"github.com/bytedance/sonic"
 	"github.com/google/wire"
-	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/meowchat/system"
 	"github.com/xh-polaris/service-idl-gen-go/kitex_gen/platform/comment"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 
@@ -32,7 +28,6 @@ type ICommentService interface {
 
 type CommentService struct {
 	Config       *config.Config
-	MqProducer   rocketmq.Producer
 	CommentModel mapper.CommentModel
 	HistoryModel mapper.HistoryModel
 	Redis        *redis.Redis
@@ -73,8 +68,6 @@ func (s *CommentService) CreateComment(ctx context.Context, req *comment.CreateC
 		Id:      data.ID.Hex(),
 		GetFish: false,
 	}
-
-	s.SendNotificationMessage(req)
 
 	if req.GetFirstLevelId() != "" {
 		return resp, nil
@@ -282,41 +275,4 @@ func (s *CommentService) ListCommentByReplyToAndType(ctx context.Context, req *c
 		)
 	}
 	return &res, nil
-}
-
-func (s *CommentService) SendNotificationMessage(req *comment.CreateCommentReq) {
-
-	message := &system.Notification{
-		TargetUserId:    req.ReplyTo,
-		SourceUserId:    req.AuthorId,
-		SourceContentId: req.ParentId,
-		Type:            0,
-		Text:            req.Text,
-		IsRead:          false,
-	}
-	if req.GetFirstLevelId() != "" {
-		message.Type = 3
-	} else {
-		if req.Type == 2 {
-			message.Type = 1
-		} else if req.Type == 3 {
-			message.Type = 2
-		}
-	}
-
-	json, _ := sonic.Marshal(message)
-	msg := &mqprimitive.Message{
-		Topic: "notification",
-		Body:  json,
-	}
-
-	res, err := s.MqProducer.SendSync(context.Background(), msg)
-	if err != nil || res.Status != mqprimitive.SendOK {
-		for i := 0; i < 2; i++ {
-			res, err := s.MqProducer.SendSync(context.Background(), msg)
-			if err == nil && res.Status == mqprimitive.SendOK {
-				break
-			}
-		}
-	}
 }

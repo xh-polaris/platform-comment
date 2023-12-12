@@ -20,11 +20,6 @@ type Config struct {
 		DB  string
 		URL string
 	}
-	RocketMq *struct {
-		URL       []string
-		Retry     int
-		GroupName string
-	}
 }
 
 func NewConfig() (*Config, error) {
